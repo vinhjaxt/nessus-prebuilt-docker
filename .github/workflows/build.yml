@@ -1,0 +1,55 @@
+name: Run script
+
+on:
+  issues:
+    types: [opened, reopened, closed, labeled, unlabeled]
+  issue_comment:
+    types: [created, edited, deleted]
+
+jobs:
+
+  build:
+
+    runs-on: ubuntu-latest
+
+    steps:
+# Build nessus
+    - uses: actions/checkout@v3
+      with:
+        lfs: false
+#    - name: Checkout LFS objects
+#      run: git lfs checkout
+    - name: Run script
+      run: |
+        docker image ls
+        ls -alvh
+        ls -alvh ./build
+        bash build.sh
+        docker image ls
+        docker save --output nessus.tar nessus:latest
+        sha256sum nessus.tar > checksum.txt
+        split --verbose -b1G nessus.tar split_nessus.tar.
+# Done build nessus
+
+# Upload artifact
+#    - uses: actions/upload-artifact@v3
+#      with:
+#        name: nessus-docker-image
+#        path: ./nessus.tar
+# Done upload artifact
+
+# Create release
+    - name: Generate release tag
+      id: tag
+      run: |
+        echo "::set-output name=release_tag::ActionBuild_$(date +"%Y.%m.%d_%H-%M-%S")"
+    - name: Release
+      uses: softprops/action-gh-release@v1
+      with:
+        body_path: checksum.txt
+        append_body: true
+        tag_name: ${{ steps.tag.outputs.release_tag }}
+        files: |
+          ./split_nessus*
+          ./checksum.txt
+# Done release
