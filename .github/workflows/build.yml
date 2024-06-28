@@ -1,10 +1,6 @@
 name: Run script
 
-on:
-  issues:
-    types: [opened, reopened, closed, labeled, unlabeled]
-  issue_comment:
-    types: [created, edited, deleted]
+on: workflow_dispatch
 
 jobs:
 
